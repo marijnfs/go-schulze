@@ -36,8 +36,8 @@ func MakeTable(C int) *Table {
 	return &Table{make([]int, C * C), make([]int, C * C), C}
 }
 
-func (t *Table) Prefer(x, y int) {
-	t.votes[y * t.C + x]++
+func (t *Table) Prefer(i, j int) {
+	*t.Vote(i, j)++
 }
 
 func (t *Table) Vote(i, ii int) *int {
@@ -50,9 +50,9 @@ func (t *Table) SchulzeVote(i, ii int) *int {
 
 func (t *Table) AddVote(ranks []int) {
 	for i, x := range ranks {
-		for ii, y := range ranks {
+		for j, y := range ranks {
 			if x < y {
-				t.Prefer(i, ii)
+				t.Prefer(i, j)
 			}
 		}
 	}
@@ -127,6 +127,8 @@ func (t *Table) SchulzeRankString() string {
 	var b bytes.Buffer
 	done := make([]bool, t.C)
 
+	ranks := make([]int, 0)
+
 	rank := 0
 a:
 	for {
@@ -144,6 +146,7 @@ a:
 				if win {
 					fmt.Fprintln(&b, rank, ":", i)
 					winners = append(winners, i)
+					ranks = append(ranks, i)
 				}
 			}
 		}
@@ -157,13 +160,44 @@ a:
 		}
 		break
 	}
+
+	
+	for _, j := range ranks {
+		for _, i := range ranks {
+			if *t.Vote(i, j) > *t.Vote(j, i) {
+				fmt.Fprint(&b, BLUE)
+			} else if *t.Vote(i, j) < *t.Vote(j, i) {
+				fmt.Fprint(&b, RED)
+			} else {
+				fmt.Fprint(&b, COL_RESET)
+			}
+			fmt.Fprint(&b, *t.Vote(i, j), " ")
+		}
+		fmt.Fprintln(&b)
+	}
+
+	for _, j := range ranks {
+		for _, i := range ranks {
+			if *t.SchulzeVote(i, j) > *t.SchulzeVote(j, i) {
+				fmt.Fprint(&b, BLUE)
+			} else if *t.SchulzeVote(i, j) < *t.SchulzeVote(j, i) {
+				fmt.Fprint(&b, RED)
+			} else {
+				fmt.Fprint(&b, COL_RESET)
+			}
+			fmt.Fprint(&b, *t.SchulzeVote(i, j), " ")
+		}
+		fmt.Fprintln(&b)
+	}
+	fmt.Fprint(&b, COL_RESET)
+
 	return b.String()
 }
 
 func main() {
 	t := MakeTable(20)
 	fmt.Print("Voting...")
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 1000; i++ {
 		t.AddVote(rand.Perm(t.C))
 	}
 	fmt.Println("Done")
