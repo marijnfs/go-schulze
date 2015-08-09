@@ -59,7 +59,7 @@ func (t *Table) AddVote(ranks []int) {
 }
 
 func (t *Table) Schulze() {
-	for i, _ := range t.schulze_votes {
+	for i := range t.schulze_votes {
 		t.schulze_votes[i] = 0
 	}
 
@@ -123,10 +123,47 @@ func (t *Table) SchulzeString() string {
 	return b.String()
 }
 
+func (t *Table) SchulzeRankString() string {
+	var b bytes.Buffer
+	done := make([]bool, t.C)
+
+	rank := 0
+a:
+	for {
+		winners := make([]int, 0)
+
+		for i := 0; i < t.C; i++ {
+			if !done[i] {
+				win := true
+				for j := 0; j < t.C; j++ {
+					if i != j && !done[j] && *t.SchulzeVote(i, j) > *t.SchulzeVote(j, i) {
+						win = false
+						break
+					}
+				}
+				if win {
+					fmt.Fprintln(&b, rank, ":", i)
+					winners = append(winners, i)
+				}
+			}
+		}
+
+		for _, v := range winners {
+			done[v] = true
+		}
+		rank++
+		for _, v := range done {
+			if !v { continue a}
+		}
+		break
+	}
+	return b.String()
+}
+
 func main() {
-	t := MakeTable(100)
+	t := MakeTable(20)
 	fmt.Print("Voting...")
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 100000; i++ {
 		t.AddVote(rand.Perm(t.C))
 	}
 	fmt.Println("Done")
@@ -137,5 +174,6 @@ func main() {
 	t.Schulze()
 	fmt.Println("Done")
 	fmt.Println(t.SchulzeString())
+	fmt.Println(t.SchulzeRankString())
 
 }
