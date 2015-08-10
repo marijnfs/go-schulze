@@ -40,12 +40,12 @@ func (t *Table) Prefer(i, j int) {
 	*t.Vote(i, j)++
 }
 
-func (t *Table) Vote(i, ii int) *int {
-	return &t.votes[ii * t.C + i]
+func (t *Table) Vote(i, j int) *int {
+	return &t.votes[j * t.C + i]
 }
 
-func (t *Table) SchulzeVote(i, ii int) *int {
-	return &t.schulze_votes[ii * t.C + i]
+func (t *Table) SchulzeVote(i, j int) *int {
+	return &t.schulze_votes[j * t.C + i]
 }
 
 func (t *Table) AddVote(ranks []int) {
@@ -66,7 +66,7 @@ func (t *Table) Schulze() {
 	
 	for i := 0; i < t.C; i++ {
 		for j := 0; j < t.C; j++ {
-			if i != j { //&& *t.Vote(i, j) >= *t.Vote(j, i) {
+			if i != j { //&& *t.Vote(i, j) >= *t.Vote(j, i) { //experimenting
 				*t.SchulzeVote(i, j) = *t.Vote(i, j)
 			}
 		}
@@ -87,8 +87,8 @@ func (t *Table) Schulze() {
 
 func (t *Table) String() string {
 	var b bytes.Buffer
-	for j := 0; j < t.C; j++ {
-		for i := 0; i < t.C; i++ {
+	for i := 0; i < t.C; i++ {
+		for j := 0; j < t.C; j++ {
 			if *t.Vote(i, j) > *t.Vote(j, i) {
 				fmt.Fprint(&b, BLUE)
 			} else if *t.Vote(i, j) < *t.Vote(j, i) {
@@ -106,8 +106,8 @@ func (t *Table) String() string {
 
 func (t *Table) SchulzeString() string {
 	var b bytes.Buffer
-	for j := 0; j < t.C; j++ {
-		for i := 0; i < t.C; i++ {
+	for i := 0; i < t.C; i++ {
+		for j := 0; j < t.C; j++ {
 			if *t.SchulzeVote(i, j) > *t.SchulzeVote(j, i) {
 				fmt.Fprint(&b, BLUE)
 			} else if *t.SchulzeVote(i, j) < *t.SchulzeVote(j, i) {
@@ -129,7 +129,7 @@ func (t *Table) SchulzeRankString() string {
 
 	ranks := make([]int, 0)
 
-	rank := 0
+	rank := 1
 a:
 	for {
 		winners := make([]int, 0)
@@ -162,8 +162,8 @@ a:
 	}
 
 	
-	for _, j := range ranks {
-		for _, i := range ranks {
+	for _, i := range ranks {
+		for _, j := range ranks {
 			if *t.Vote(i, j) > *t.Vote(j, i) {
 				fmt.Fprint(&b, BLUE)
 			} else if *t.Vote(i, j) < *t.Vote(j, i) {
@@ -175,9 +175,10 @@ a:
 		}
 		fmt.Fprintln(&b)
 	}
+	fmt.Fprint(&b, COL_RESET)
 
-	for _, j := range ranks {
-		for _, i := range ranks {
+	for _, i := range ranks {
+		for _, j := range ranks {
 			if *t.SchulzeVote(i, j) > *t.SchulzeVote(j, i) {
 				fmt.Fprint(&b, BLUE)
 			} else if *t.SchulzeVote(i, j) < *t.SchulzeVote(j, i) {
@@ -199,12 +200,12 @@ func main() {
 	fmt.Print("Voting...")
 
 	users := make([][]int, 3)
-	users[0] = []int{5,3,4,1,1,1}
-	users[1] = []int{3,4,5,1,1,1}
-	users[2] = []int{1,5,1,4,2,1}
-	for i := 0; i < 1000; i++ {
+	users[0] = []int{1,1,1,5,5,5}
+	users[1] = []int{5,5,5,1,5,5}
+	users[2] = []int{5,5,5,5,1,5}
+	for i := 0; i < 100000; i++ {
 		//t.AddVote(rand.Perm(t.C))
-		user := rand.Intn(3)
+		user := i % 3 //rand.Intn(3)
 		vote := make([]int, 6)
 		for i, v := range users[user] {
 			vote[i] = v + rand.Intn(5) - 2
