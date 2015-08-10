@@ -66,7 +66,7 @@ func (t *Table) Schulze() {
 	
 	for i := 0; i < t.C; i++ {
 		for j := 0; j < t.C; j++ {
-			if i != j && *t.Vote(i, j) >= *t.Vote(j, i) {
+			if i != j { //&& *t.Vote(i, j) >= *t.Vote(j, i) {
 				*t.SchulzeVote(i, j) = *t.Vote(i, j)
 			}
 		}
@@ -138,7 +138,7 @@ a:
 			if !done[i] {
 				win := true
 				for j := 0; j < t.C; j++ {
-					if i != j && !done[j] && *t.SchulzeVote(i, j) > *t.SchulzeVote(j, i) {
+					if i != j && !done[j] && *t.SchulzeVote(i, j) < *t.SchulzeVote(j, i) {
 						win = false
 						break
 					}
@@ -195,10 +195,21 @@ a:
 }
 
 func main() {
-	t := MakeTable(20)
+	t := MakeTable(6)
 	fmt.Print("Voting...")
+
+	users := make([][]int, 3)
+	users[0] = []int{5,3,4,1,1,1}
+	users[1] = []int{3,4,5,1,1,1}
+	users[2] = []int{1,5,1,4,2,1}
 	for i := 0; i < 1000; i++ {
-		t.AddVote(rand.Perm(t.C))
+		//t.AddVote(rand.Perm(t.C))
+		user := rand.Intn(3)
+		vote := make([]int, 6)
+		for i, v := range users[user] {
+			vote[i] = v + rand.Intn(5) - 2
+		}
+		t.AddVote(vote)
 	}
 	fmt.Println("Done")
 	
